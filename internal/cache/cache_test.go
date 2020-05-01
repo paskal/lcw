@@ -15,8 +15,7 @@ import (
 )
 
 func TestLoadingCacheNoPurge(t *testing.T) {
-	var lc LoadingCache
-	lc = NewLoadingCache()
+	lc := NewLoadingCache()
 
 	called := 0
 	v, err := lc.Get("key1", time.Minute, func() (data interface{}, err error) {
@@ -69,7 +68,7 @@ func TestLoadingCacheWithPurge(t *testing.T) {
 	assert.Equal(t, "val1", v)
 	assert.Equal(t, 1, called)
 
-	time.Sleep(200 * time.Millisecond) //expire
+	time.Sleep(200 * time.Millisecond) // expire
 	v, err = lc.Get("key1", 150*time.Millisecond, func() (data interface{}, err error) {
 		called++
 		return "val1", nil
@@ -87,6 +86,7 @@ func TestLoadingCacheWithPurgeEnforcedBySize(t *testing.T) {
 	called := 0
 
 	for i := 0; i < 100; i++ {
+		i := i
 		v, err := lc.Get(fmt.Sprintf("key%d", i), 150*time.Millisecond, func() (data interface{}, err error) {
 			called++
 			return fmt.Sprintf("val%d", i), nil
@@ -212,7 +212,7 @@ func TestLoadingCacheWithPurgeMaxLru(t *testing.T) {
 }
 
 func TestLoadingCacheStat(t *testing.T) {
-	lc := NewLoadingCache(PurgeEvery(time.Millisecond*10), MaxKeys(50)) //50 records max
+	lc := NewLoadingCache(PurgeEvery(time.Millisecond*10), MaxKeys(50)) // 50 records max
 
 	// 10 distinct records, 20 hits for each one
 	for i := 0; i < 200; i++ {
@@ -264,7 +264,7 @@ func TestLoadingCacheConcurrentUpdate(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(100)
 	for i := 0; i < 100; i++ {
-		go func(i int) {
+		go func() {
 			time.Sleep(10 * time.Millisecond)
 			r, e := lc.Get(fmt.Sprintf("key"), time.Millisecond*100, func() (data interface{}, err error) {
 				return slowUpdate(), nil
@@ -272,7 +272,7 @@ func TestLoadingCacheConcurrentUpdate(t *testing.T) {
 			require.Nil(t, e)
 			assert.Equal(t, 100, len(r.([]string)))
 			wg.Done()
-		}(i)
+		}()
 	}
 	wg.Wait()
 	t.Log(lc)
